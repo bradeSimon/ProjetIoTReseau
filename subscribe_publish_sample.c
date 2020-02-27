@@ -231,9 +231,32 @@ int main(int argc, char **argv) {
 			// If the client is attempting to reconnect we will skip the rest of the loop.
 			continue;
 		}
+		
 
 		IOT_INFO("-->sleep");
 		sleep(1);
+
+		//Début du code qui sert à la lecture de la température du CPU.
+		FILE *fp;
+		char path[1035];
+		float tempCPU;
+		/* Open the command for reading. */
+		fp = popen("cat /sys/class/thermal/thermal_zone0/temp", "r");
+		if (fp == NULL) {
+			printf("Failed to run command\n" );
+			exit(1);
+		}
+
+		/* Read the output a line at a time - output it. */
+		while (fgets(path, sizeof(path), fp) != NULL) {
+			sscanf(path, "%f", &tempCPU);
+			tempCPU = tempCPU/1000;
+			printf("\nThe temp of the CPU is : %.2f", tempCPU);
+		}
+
+		/* close */
+		pclose(fp);
+		//Fin du code qui sert à la lecture de la température du CPU.
 		sprintf(cPayload, "%s : %d ", "hello from SDK QOS0", i++);
 		paramsQOS0.payloadLen = strlen(cPayload);
 		rc = aws_iot_mqtt_publish(&client, "sdkTest/sub", 11, &paramsQOS0);
