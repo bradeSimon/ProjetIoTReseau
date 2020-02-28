@@ -135,7 +135,7 @@ int main(int argc, char **argv) {
 	char clientKey[PATH_MAX + 1];
 	char CurrentWD[PATH_MAX + 1];
 	char cPayload[100];
-
+	float tempCPU;
 	int32_t i = 0;
 
 	IoT_Error_t rc = FAILURE;
@@ -200,9 +200,9 @@ int main(int argc, char **argv) {
 		IOT_ERROR("Unable to set Auto Reconnect to true - %d", rc);
 		return rc;
 	}
-
+	
 	IOT_INFO("Subscribing...");
-	rc = aws_iot_mqtt_subscribe(&client, "sdkTest/sub", 11, QOS0, iot_subscribe_callback_handler, NULL);
+	rc = aws_iot_mqtt_subscribe(&client, "TempSensorTopic", 15, QOS0, iot_subscribe_callback_handler, NULL);
 	if(SUCCESS != rc) {
 		IOT_ERROR("Error subscribing : %d ", rc);
 		return rc;
@@ -234,12 +234,12 @@ int main(int argc, char **argv) {
 		
 
 		IOT_INFO("-->sleep");
-		sleep(1);
+		sleep(10);//À changer pour 60 secondes à la fin du labo car c'est ce qui est demandé dans le laboratoire.
 
-		//Début du code qui sert à la lecture de la température du CPU.
+		//Début du code qui sert à l'acquisition de la température du CPU.
 		FILE *fp;
 		char path[1035];
-		float tempCPU;
+		
 		/* Open the command for reading. */
 		fp = popen("cat /sys/class/thermal/thermal_zone0/temp", "r");
 		if (fp == NULL) {
@@ -251,26 +251,27 @@ int main(int argc, char **argv) {
 		while (fgets(path, sizeof(path), fp) != NULL) {
 			sscanf(path, "%f", &tempCPU);
 			tempCPU = tempCPU/1000;
-			printf("\nThe temp of the CPU is : %.2f", tempCPU);
+			//printf("\nThe temp of the CPU is : %.2f\n", tempCPU);
 		}
 
 		/* close */
 		pclose(fp);
-		//Fin du code qui sert à la lecture de la température du CPU.
-		sprintf(cPayload, "%s : %d ", "hello from SDK QOS0", i++);
+		//Fin du code qui sert à l'acquisition de la température du CPU.
+		
+		/*sprintf(cPayload, "%s : %d ", "hello from SDK QOS0", i++);
 		paramsQOS0.payloadLen = strlen(cPayload);
-		rc = aws_iot_mqtt_publish(&client, "sdkTest/sub", 11, &paramsQOS0);
+		rc = aws_iot_mqtt_publish(&client, "Test/sub", 11, &paramsQOS0);
 		if(publishCount > 0) {
 			publishCount--;
 		}
 
 		if(publishCount == 0 && !infinitePublishFlag) {
 			break;
-		}
-
-		sprintf(cPayload, "%s : %d ", "hello from SDK QOS1", i++);
+		}*/
+	
+		sprintf(cPayload, "{\"%s\": \"%.2f\"}", "temperature", tempCPU);
 		paramsQOS1.payloadLen = strlen(cPayload);
-		rc = aws_iot_mqtt_publish(&client, "sdkTest/sub", 11, &paramsQOS1);
+		rc = aws_iot_mqtt_publish(&client, "TempSensorTopic", 15, &paramsQOS1);
 		if (rc == MQTT_REQUEST_TIMEOUT_ERROR) {
 			IOT_WARN("QOS1 publish ack not received.\n");
 			rc = SUCCESS;
