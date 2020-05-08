@@ -252,7 +252,6 @@ int main(int argc, char **argv) {
 		while (fgets(path, sizeof(path), fp) != NULL) {
 			sscanf(path, "%f", &tempCPU);
 			tempCPU = tempCPU/1000;
-			//printf("\nThe temp of the CPU is : %.2f\n", tempCPU);
 		}
 
 		/* close */
@@ -260,23 +259,13 @@ int main(int argc, char **argv) {
 		//Fin du code qui sert à l'acquisition de la température du CPU.
 
 		//Exemple du site suivant : https://stackoverflow.com/questions/1442116/how-to-get-the-date-and-time-values-in-a-c-program
+		//Acquisition du timestamp
 		time_t t = time(NULL);
 		struct tm *tm = localtime(&t);
 		char s[64];
 		assert(strftime(s, sizeof(s), "%c", tm));
 		printf("%s\n", s);
 
-		/*sprintf(cPayload, "%s : %d ", "hello from SDK QOS0", i++);
-		paramsQOS0.payloadLen = strlen(cPayload);
-		rc = aws_iot_mqtt_publish(&client, "Test/sub", 11, &paramsQOS0);
-		if(publishCount > 0) {
-			publishCount--;
-		}
-
-		if(publishCount == 0 && !infinitePublishFlag) {
-			break;
-		}*/
-	
 		sprintf(cPayload, "{\"%s\":\"%s\",\"%s\":\"%s\", \"%s\": \"%.2f\"}","timestamp",s,"pos","0","temperature", tempCPU);
 		paramsQOS1.payloadLen = strlen(cPayload);
 		rc = aws_iot_mqtt_publish(&client, "TempSensorTopic", 15, &paramsQOS1);
@@ -289,7 +278,7 @@ int main(int argc, char **argv) {
 		}
 
 		IOT_INFO("-->sleep");
-		sleep(10);//À changer pour 60 secondes à la fin du labo car c'est ce qui est demandé dans le laboratoire.
+		sleep(60);//À changer pour 60 secondes à la fin du labo car c'est ce qui est demandé dans le laboratoire.
 	}
 
 	// Wait for all the messages to be received
